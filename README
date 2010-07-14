@@ -1,0 +1,52 @@
+= Lua-D =
+
+YOU DON'T WANT THIS. This is just something I'm messing around with on a sick day, I'm all stuffy and gross and don't want to move so I needed a project. I have no idea if/when this will go anywhere. Code smells abound.
+
+== Rationale ==
+
+Lua-D is an implementation of the Lua 5.1 virtual machine and runtime for D. The
+goal is to take advantage of D's language and runtime features in a more
+integrated way than is possible when using the C implementation.
+
+ * Use D's garbage collector, rather than running both D GC and Lua GC in the
+   same process.
+ * Use D's native coroutine support (in core.thread.Fiber) so that Lua threads
+   can yield across native code call sites.
+ * Use D's more dynamic features to create a nicer Lua API. Yeah, turns out
+   std.variant is way buggy, and even crashes the compiler with the latest DMD
+   2.047. So not much luck here so far, though the LuaFunc usage is kind of nice
+   I guess. Probably could be more efficient though.
+ * Maybe even use D's native support for closures to enable Lua's closures,
+   rather than hand-writing an upvalue implementation.
+
+And of course, the real rationale:
+
+ * I want to learn more about compilers/VMs.
+
+Right now, Lua-D is planned to be an interpreter/runtime only. No JIT, and no
+compiler. To run code, you'll first need to compile your .lua files to .luac
+files using the luac tool that comes with the official Lua distribution. Lua-D
+loads these .luac files directly. Be warned, it doesn't validate the header yet
+so loading a .luac file created with a different platform or Lua version will have weird results.
+
+I should probably just include the Lua compiler right in the binary, and call
+out to it.
+
+== This code works! ==
+
+function go(a)
+io.write("Hello world, from ",a,"!\n")
+return 3, 4, 5
+end
+
+local z, x = go(_VERSION)
+
+local a, b, c, d, e = go("Lua-D")
+io.write("got ",a, " ", b,"\n")
+
+== Most other code probably doesn't :/ ==
+
+
+== LICENSE ==
+
+Lua license.
