@@ -115,7 +115,7 @@ struct LuaValue1 {
     Val val;
     alias val.peek peek;
 
-    uint toHash() const {
+    ulong toHash() const {
         return (cast(Val)val).toHash();
     }
 
@@ -197,19 +197,19 @@ LuaValue[] LuaFormat(LuaValue[] args)
 
 LuaValue[] LuaByte(LuaValue[] args)
 {
-    string *input = args[0].peek!string;
-    assert(input);
+    assert(args.length > 0);
+    auto input = *args[0].peek!string;
     int i = 1;
     if (args.length > 1)
         i = cast(int)*args[1].peek!double;
-    int j = 1;
+    int j = i;
     if (args.length > 2)
         j = cast(int)*args[2].peek!double;
 
     LuaValue[] ret;
     ret.length = j+1 - i;
     foreach (x; i .. j+1) {
-        ret[i - x] = LuaValue(cast(double)*input[x - 1]);
+        ret[x - i] = LuaValue(cast(double)input[x - 1]);
     }
     return ret;
 }
@@ -333,12 +333,11 @@ class LuaState {
                         dbg("b: ", b, " nresults: ", nresults);
                         /*assert(b != 0); // not sure yet what b == 0 does*/
                         /*lastpc = pc;*/
-                        auto func = ra.peek!LuaFunc;
                         if (auto func = ra.peek!LuaFunc) {
                             auto results = b > 0 ?
                                 (*func)(stack[argA(i) + 1 .. argA(i) + b]) :
                                 (*func)([]);
-                            int resultsToUse =
+                            auto resultsToUse =
                                 (nresults < 0 || nresults > results.length) ?
                                 results.length : nresults;
                             if (resultsToUse > 0) {
@@ -387,6 +386,11 @@ class LuaState {
                         assert(new_fun.nups == 0); // not ready for upvals
                         *ra = LuaValue(new Closure(new_fun));
                         continue;
+
+                    default:
+                        throw new Exception("opcode " ~ to!string(opcode(i))
+                                ~ " not implemented");
+
                 }
             }
         }
